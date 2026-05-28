@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Incentivale · Analytics Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.44.0/dist/apexcharts.min.js"></script>
+<style>
+:root {
+  --bg-base: #0d0a1a;
+  --bg-card: rgba(255,255,255,0.04);
+  --bg-card-hover: rgba(255,255,255,0.07);
+  --border: rgba(255,255,255,0.08);
+  --border-glow: rgba(138,43,226,0.4);
+  --purple-primary: #7c3aed;
+  --purple-light: #a78bfa;
+  --purple-neon: #c084fc;
+  --purple-deep: #4c1d95;
+  --accent-gold: #f59e0b;
+  --accent-cyan: #22d3ee;
+  --accent-green: #10b981;
+  --accent-red: #f43f5e;
+  --text-primary: #f1f0ff;
+  --text-secondary: rgba(241,240,255,0.55);
+  --text-muted: rgba(241,240,255,0.3);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow-glow: 0 0 40px rgba(124,58,237,0.2);
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Background mesh */
+body::before {
+  content:'';
+  position:fixed; inset:0; z-index:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 10%, rgba(124,58,237,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 60% at 80% 80%, rgba(76,29,149,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(192,132,252,0.04) 0%, transparent 70%);
+  pointer-events:none;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  position: fixed; left:0; top:0; bottom:0;
+  width: 240px;
+  background: rgba(13,10,26,0.95);
+  border-right: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 0;
+  transition: transform 0.3s ease;
+}
+
+.logo {
+  padding: 0 24px 28px;
+  border-bottom: 1px solid var(--border);
+}
+.logo-text {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+  background: linear-gradient(135deg, #c084fc, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.logo-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.nav {
+  flex:1;
+  padding: 20px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-section {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 12px 12px 6px;
+  font-weight: 600;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+.nav-item:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+.nav-item.active {
+  background: rgba(124,58,237,0.15);
+  color: var(--purple-light);
+  border-color: rgba(124,58,237,0.3);
+}
+.nav-icon { font-size: 15px; width: 18px; text-align: center; }
+
+.sidebar-footer {
+  padding: 20px 24px;
+  border-top: 1px solid var(--border);
+}
+.badge-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16,185,129,0.1);
+  border: 1px solid rgba(16,185,129,0.25);
+  color: #10b981;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+.dot-live {
+  width: 6px; height: 6px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: pulse-green 2s infinite;
+}
+@keyframes pulse-green {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:0.5; transform:scale(1.3); }
+}
+
+/* ===== MAIN ===== */
+.main {
+  margin-left: 240px;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(13,10,26,0.8);
+  backdrop-filter: blur(20px);
+  position: sticky; top:0; z-index:50;
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.page-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.filter-group {
+  display: flex;
+  gap: 8px;
+}
+
+.filter-select {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 8px 14px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+}
+.filter-select:focus, .filter-select:hover {
+  border-color: var(--border-glow);
+  color: var(--text-primary);
+}
+
+.btn-export {
+  background: rgba(124,58,237,0.15);
+  border: 1px solid rgba(124,58,237,0.35);
+  color: var(--purple-light);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-export:hover {
+  background: rgba(124,58,237,0.25);
+  box-shadow: 0 0 20px rgba(124,58,237,0.3);
+}
+
+.content { padding: 28px 32px; }
+
+/* ===== PAGE TABS ===== */
+.page-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 28px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px;
+  width: fit-content;
+}
+.tab {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  border: none;
+  background: transparent;
+}
+.tab.active {
+  background: rgba(124,58,237,0.2);
+  color: var(--purple-light);
+  box-shadow: 0 0 15px rgba(124,58,237,0.15);
+}
+.tab:hover:not(.active) { color: var(--text-primary); background: rgba(255,255,255,0.04); }
+
+/* ===== PAGE SECTIONS ===== */
+.page-section { display: none; }
+.page-section.active { display: block; }
+
+/* ===== KPI GRID ===== */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+  cursor: default;
+}
+.kpi-card::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:2px;
+  background: var(--card-accent, linear-gradient(90deg, var(--purple-primary), var(--purple-neon)));
+}
+.kpi-card:hover {
+  border-color: var(--border-glow);
+  background: var(--bg-card-hover);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-2px);
+}
+.kpi-card.gold::before { background: linear-gradient(90deg, #f59e0b, #fcd34d); }
+.kpi-card.cyan::before { background: linear-gradient(90deg, #22d3ee, #67e8f9); }
+.kpi-card.green::before { background: linear-gradient(90deg, #10b981, #34d399); }
+.kpi-card.red::before { background: linear-gradient(90deg, #f43f5e, #fb7185); }
+
+.kpi-label {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.kpi-value {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.kpi-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 20px;
+}
+.kpi-delta.up { background: rgba(16,185,129,0.12); color: #10b981; }
+.kpi-delta.down { background: rgba(244,63,94,0.12); color: #f43f5e; }
+.kpi-sparkline {
+  margin-top: 12px;
+  height: 36px;
+}
+
+/* ===== CHART GRID ===== */
+.chart-grid {
+  display: grid;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+.chart-grid-2 { grid-template-columns: 1fr 1fr; }
+.chart-grid-3 { grid-template-columns: 2fr 1fr; }
+.chart-grid-full { grid-template-columns: 1fr; }
+
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  transition: border-color 0.3s;
+}
+.chart-card:hover { border-color: var(--border-glow); }
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+.chart-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.chart-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+.chart-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(124,58,237,0.12);
+  color: var(--purple-light);
+  border: 1px solid rgba(124,58,237,0.2);
+}
+
+.chart-container { position: relative; }
+
+/* ===== TABLE ===== */
+.table-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.table-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+}
+.table-search {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 7px 14px;
+  outline: none;
+  width: 200px;
+  transition: all 0.2s;
+}
+.table-search:focus { border-color: var(--border-glow); color: var(--text-primary); }
+
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+thead th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+}
+tbody tr {
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.15s;
+}
+tbody tr:hover { background: rgba(255,255,255,0.03); }
+tbody td { padding: 12px 14px; color: var(--text-secondary); }
+tbody td:first-child { color: var(--text-primary); font-weight: 500; }
+
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px; height: 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 12px;
+}
+.rank-1 { background: rgba(245,158,11,0.2); color: #f59e0b; }
+.rank-2 { background: rgba(100,116,139,0.2); color: #94a3b8; }
+.rank-3 { background: rgba(180,83,9,0.2); color: #d97706; }
+.rank-other { background: rgba(255,255,255,0.05); color: var(--text-muted); }
+
+.progress-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--purple-primary), var(--purple-neon));
+  transition: width 1s ease;
+}
+.progress-fill.gold { background: linear-gradient(90deg, #f59e0b, #fcd34d); }
+.progress-fill.cyan { background: linear-gradient(90deg, #22d3ee, #67e8f9); }
+.progress-fill.green { background: linear-gradient(90deg, #10b981, #34d399); }
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+.status-active { background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
+.status-inactive { background: rgba(244,63,94,0.1); color: #f43f5e; border: 1px solid rgba(244,63,94,0.2); }
+.status-pending { background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2); }
+
+/* ===== REGIONAL MAP WIDGET ===== */
+.region-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 8px;
+}
+.region-item {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.region-item:hover {
+  background: rgba(124,58,237,0.08);
+  border-color: var(--border-glow);
+}
+.region-name { font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+.region-value { font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--purple-light); }
+.region-pct { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* ===== WATERFALL / GANTT ===== */
+.campaign-list { display: flex; flex-direction: column; gap: 10px; }
+.campaign-item {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.2s;
+}
+.campaign-item:hover { border-color: var(--border-glow); background: rgba(124,58,237,0.06); }
+.campaign-name { font-size: 13.5px; font-weight: 600; color: var(--text-primary); min-width: 180px; }
+.campaign-meta { font-size: 12px; color: var(--text-muted); }
+.campaign-bar-wrap { flex: 1; }
+.campaign-value { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--purple-light); min-width: 100px; text-align: right; }
+
+/* ===== MOBILE SIDEBAR TOGGLE ===== */
+.sidebar-toggle {
+  display: none;
+  position: fixed;
+  top: 16px; left: 16px;
+  z-index: 200;
+  background: var(--purple-primary);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  width: 40px; height: 40px;
+  font-size: 18px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== INSIGHT STRIP ===== */
+.insight-strip {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.insight-chip {
+  flex-shrink: 0;
+  background: rgba(124,58,237,0.08);
+  border: 1px solid rgba(124,58,237,0.2);
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.insight-chip span { color: var(--purple-neon); font-weight: 600; }
+
+/* ===== HEADER ANIM ===== */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(20px); }
+  to { opacity:1; transform:translateY(0); }
+}
+.kpi-card { animation: fadeUp 0.5s ease both; }
+.kpi-card:nth-child(1) { animation-delay: 0.05s; }
+.kpi-card:nth-child(2) { animation-delay: 0.1s; }
+.kpi-card:nth-child(3) { animation-delay: 0.15s; }
+.kpi-card:nth-child(4) { animation-delay: 0.2s; }
+.kpi-card:nth-child(5) { animation-delay: 0.25s; }
+.kpi-card:nth-child(6) { animation-delay: 0.3s; }
+.chart-card { animation: fadeUp 0.5s ease both; animation-delay: 0.3s; }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.3); border-radius: 3px; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1100px) {
+  .chart-grid-2, .chart-grid-3 { grid-template-columns: 1fr; }
+  .region-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; }
+  .sidebar-toggle { display: flex; }
+  .content { padding: 20px 16px; }
+  .topbar { padding: 14px 16px; }
+  .filter-group { display: none; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .region-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="logo">
+    <div class="logo-text">Incentivale</div>
+    <div class="logo-sub">Analytics Hub</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Visões</div>
+    <a class="nav-item active" onclick="showPage('executivo',this)">
+      <span class="nav-icon">⬡</span> Executivo
+    </a>
+    <a class="nav-item" onclick="showPage('financeiro',this)">
+      <span class="nav-icon">◈</span> Financeiro
+    </a>
+    <a class="nav-item" onclick="showPage('campanhas',this)">
+      <span class="nav-icon">◉</span> Campanhas
+    </a>
+    <a class="nav-item" onclick="showPage('regional',this)">
+      <span class="nav-icon">◎</span> Regional
+    </a>
+    <a class="nav-item" onclick="showPage('vendedores',this)">
+      <span class="nav-icon">◐</span> Vendedores
+    </a>
+    <a class="nav-item" onclick="showPage('resgates',this)">
+      <span class="nav-icon">◑</span> Resgates
+    </a>
+    <div class="nav-section">Analytics</div>
+    <a class="nav-item" onclick="showPage('ranking',this)">
+      <span class="nav-icon">▲</span> Ranking
+    </a>
+    <a class="nav-item" onclick="showPage('engagement',this)">
+      <span class="nav-icon">◆</span> Engajamento
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="badge-live"><span class="dot-live"></span> Dados ao vivo</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="pageTitle">Visão Executiva</div>
+      <div class="page-subtitle" id="pageSubtitle">Consolidado • Jan–Dez 2024</div>
+    </div>
+    <div class="topbar-right">
+      <div class="filter-group">
+        <select class="filter-select" id="filterAno" onchange="applyFilters()">
+          <option value="todos">Todos os Anos</option>
+          <option value="2024" selected>2024</option>
+          <option value="2023">2023</option>
+        </select>
+        <select class="filter-select" id="filterBU" onchange="applyFilters()">
+          <option value="todos">Todas as BUs</option>
+          <option value="FMCG">FMCG</option>
+          <option value="PHARMA">Pharma</option>
+          <option value="TELCO">Telco</option>
+          <option value="RETAIL">Retail</option>
+          <option value="AGRO">Agro</option>
+        </select>
+        <select class="filter-select" id="filterRegional" onchange="applyFilters()">
+          <option value="todos">Todas Regionais</option>
+          <option value="SUDESTE">Sudeste</option>
+          <option value="SUL">Sul</option>
+          <option value="NORDESTE">Nordeste</option>
+          <option value="CENTRO-OESTE">Centro-Oeste</option>
+          <option value="NORTE">Norte</option>
+        </select>
+      </div>
+      <button class="btn-export" onclick="exportCSV()">⬇ Exportar CSV</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ===== EXECUTIVO ===== -->
+    <section class="page-section active" id="page-executivo">
+      <div class="insight-strip" id="insightStrip"></div>
+      <div class="kpi-grid" id="kpiGrid"></div>
+      <div class="chart-grid chart-grid-2">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Evolução de Pontos & Resgates</div>
+              <div class="chart-subtitle">Mensal · Jan–Dez 2024</div>
+            </div>
+            <div class="chart-badge">Temporal</div>
+          </div>
+          <div class="chart-container" style="height:240px">
+            <canvas id="chartEvolucao"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Distribuição por BU</div>
+              <div class="chart-subtitle">% do volume total de pontos</div>
+            </div>
+            <div class="chart-badge">Estrutura</div>
+          </div>
+          <div class="chart-container" style="height:240px">
+            <canvas id="chartBU"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="chart-grid chart-grid-3">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Performance por Regional</div>
+              <div class="chart-subtitle">Pontos distribuídos vs. metas</div>
+            </div>
+          </div>
+          <div class="chart-container" style="height:220px">
+            <canvas id="chartRegional"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Status de Campanhas</div>
+              <div class="chart-subtitle">Distribuição atual</div>
+            </div>
+          </div>
+          <div class="chart-container" style="height:220px">
+            <canvas id="chartStatus"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FINANCEIRO ===== -->
+    <section class="page-section" id="page-financeiro">
+      <div class="kpi-grid" id="kpiFinanceiro"></div>
+      <div class="chart-grid chart-grid-full">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Fluxo Financeiro — Waterfall Mensal</div>
+              <div class="chart-subtitle">Pontos emitidos, resgatados e saldo</div>
+            </div>
+            <div class="chart-badge">Waterfall</div>
+          </div>
+          <div class="chart-container" style="height:280px">
+            <canvas id="chartWaterfall"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="chart-grid chart-grid-2">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Receita por Categoria de Produto</div>
+              <div class="chart-subtitle">Contribuição ao total resgatado</div>
+            </div>
+          </div>
+          <div class="chart-container" style="height:240px">
+            <canvas id="chartCategoria"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Ticket Médio de Resgate · Mensal</div>
+              <div class="chart-subtitle">Valor médio por transação</div>
+            </div>
+          </div>
+          <div class="chart-container" style="height:240px">
+            <canvas id="chartTicket"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CAMPANHAS ===== -->
+    <section class="page-section" id="page-campanhas">
+      <div class="kpi-grid" id="kpiCampanhas"></div>
+      <div class="table-card">
+        <div class="table-header">
+          <div class="chart-title">Campanhas Ativas & Histórico</div>
+          <input class="table-search" type="text" placeholder="Buscar campanha..." oninput="filterTable('tblCampanhas',this.value)">
+        </div>
+        <table id="tblCampanhas">
+          <thead>
+            <tr>
+              <th>#</th><th>Campanha</th><th>BU</th><th>Regional</th>
+              <th>Período</th><th>Pontos Emitidos</th><th>% Atingimento</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tblCampanhasBody"></tbody>
+        </table>
+      </div>
+      <div class="chart-grid chart-grid-2">
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">ROI por Campanha</div></div>
+          <div class="chart-container" style="height:260px">
+            <canvas id="chartROI"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">Funil de Conversão</div></div>
+          <div class="chart-container" style="height:260px">
+            <canvas id="chartFunil"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== REGIONAL ===== -->
+    <section class="page-section" id="page-regional">
+      <div class="kpi-grid" id="kpiRegional"></div>
+      <div class="chart-grid chart-grid-2">
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">Pontos por Regional</div></div>
+          <div class="region-grid" id="regionGrid"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">Heatmap de Performance · Regional × Mês</div></div>
+          <div id="heatmapRegional" style="height:260px; display:flex; align-items:center; justify-content:center;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== VENDEDORES ===== -->
+    <section class="page-section" id="page-vendedores">
+      <div class="kpi-grid" id="kpiVendedores"></div>
+      <div class="table-card">
+        <div class="table-header">
+          <div class="chart-title">Top Vendedores · Performance Individual</div>
+          <input class="table-search" type="text" placeholder="Buscar vendedor..." oninput="filterTable('tblVendedores',this.value)">
+        </div>
+        <table id="tblVendedores">
+          <thead>
+            <tr>
+              <th>Rank</th><th>Vendedor</th><th>BU</th><th>Regional</th>
+              <th>Pontos Acumulados</th><th>% Meta</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tblVendedoresBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== RESGATES ===== -->
+    <section class="page-section" id="page-resgates">
+      <div class="kpi-grid" id="kpiResgates"></div>
+      <div class="chart-grid chart-grid-2">
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">Resgates por Categoria de Benefício</div></div>
+          <div class="chart-container" style="height:260px"><canvas id="chartResgateCat"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">Evolução de Resgates · Acumulado</div></div>
+          <div class="chart-container" style="height:260px"><canvas id="chartResgateEvolucao"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== RANKING ===== -->
+    <section class="page-section" id="page-ranking">
+      <div class="chart-grid chart-grid-2">
+        <div class="table-card">
+          <div class="table-header"><div class="chart-title">🏆 Top 10 Vendedores</div></div>
+          <table><thead><tr><th>#</th><th>Nome</th><th>Pontos</th><th>Evolução</th></tr></thead>
+          <tbody id="rankVendedores"></tbody></table>
+        </div>
+        <div class="table-card">
+          <div class="table-header"><div class="chart-title">🏆 Top BUs por Engajamento</div></div>
+          <table><thead><tr><th>#</th><th>BU</th><th>Pontos</th><th>Engajamento</th></tr></thead>
+          <tbody id="rankBU"></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ENGAJAMENTO ===== -->
+    <section class="page-section" id="page-engagement">
+      <div class="kpi-grid" id="kpiEngajamento"></div>
+      <div class="chart-grid chart-grid-2">
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">Taxa de Engajamento Mensal</div></div>
+          <div class="chart-container" style="height:240px"><canvas id="chartEngajamento"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">Curva ABC de Vendedores</div></div>
+          <div class="chart-container" style="height:240px"><canvas id="chartABC"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /content -->
+</main>
+
+<script>
+// ============================================================
+//  DATA LAYER — substitua pelos dados reais do seu XLSX/JSON
+// ============================================================
+const DATA = {
+  meses: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+  pontos:    [1820,2100,2340,2180,2600,2950,3100,2880,3250,3480,3720,4100],
+  resgates:  [ 980,1120,1280,1150,1420,1680,1820,1650,1900,2050,2220,2460],
+  saldo:     [ 840, 980,1060,1030,1180,1270,1280,1230,1350,1430,1500,1640],
+  ticketMedio:[320, 340, 355, 330, 360, 380, 395, 370, 410, 420, 435, 450],
+  bu: {
+    labels: ['FMCG','Pharma','Telco','Retail','Agro'],
+    valores: [38, 22, 18, 14, 8]
+  },
+  regional: {
+    labels: ['Sudeste','Sul','Nordeste','Centro-Oeste','Norte'],
+    pontos:  [12400, 8600, 7200, 4800, 2800],
+    metas:   [11000, 9000, 7500, 5000, 3000]
+  },
+  campanhas: [
+    {id:1,nome:'Acelera Verão',bu:'FMCG',regional:'Sudeste',periodo:'Jan–Mar 2024',pontos:'1.240.000',atingimento:108,status:'Encerrada'},
+    {id:2,nome:'Desafio Pharma Q1',bu:'Pharma',regional:'Sul',periodo:'Jan–Mar 2024',pontos:'640.000',atingimento:95,status:'Encerrada'},
+    {id:3,nome:'Turbo Retail Abril',bu:'Retail',regional:'Nordeste',periodo:'Abr–Jun 2024',pontos:'480.000',atingimento:87,status:'Encerrada'},
+    {id:4,nome:'Boost Agro Safra',bu:'Agro',regional:'Centro-Oeste',periodo:'Mai–Ago 2024',pontos:'920.000',atingimento:112,status:'Encerrada'},
+    {id:5,nome:'Sprint Telco Q3',bu:'Telco',regional:'Sudeste',periodo:'Jul–Set 2024',pontos:'560.000',atingimento:103,status:'Encerrada'},
+    {id:6,nome:'Maratona FMCG 2S',bu:'FMCG',regional:'Sul',periodo:'Jul–Dez 2024',pontos:'1.860.000',atingimento:94,status:'Ativa'},
+    {id:7,nome:'Pharma Excellence',bu:'Pharma',regional:'Sudeste',periodo:'Out–Dez 2024',pontos:'720.000',atingimento:78,status:'Ativa'},
+    {id:8,nome:'Retail Natal',bu:'Retail',regional:'Nacional',periodo:'Nov–Dez 2024',pontos:'440.000',atingimento:65,status:'Ativa'},
+  ],
+  vendedores: [
+    {nome:'Ana Oliveira',bu:'FMCG',regional:'Sudeste',pontos:42800,meta:89},
+    {nome:'Carlos Santos',bu:'Pharma',regional:'Sul',pontos:38600,meta:102},
+    {nome:'Fernanda Lima',bu:'Telco',regional:'Nordeste',pontos:35200,meta:96},
+    {nome:'Rafael Costa',bu:'FMCG',regional:'Sudeste',pontos:32900,meta:87},
+    {nome:'Patricia Mendes',bu:'Agro',regional:'Centro-Oeste',pontos:30400,meta:111},
+    {nome:'Bruno Alves',bu:'Retail',regional:'Sul',pontos:28700,meta:83},
+    {nome:'Juliana Ferreira',bu:'FMCG',regional:'Norte',pontos:26500,meta:78},
+    {nome:'Marcos Pereira',bu:'Pharma',regional:'Sudeste',pontos:25100,meta:93},
+    {nome:'Camila Rocha',bu:'Telco',regional:'Nordeste',pontos:23800,meta:88},
+    {nome:'Diego Nascimento',bu:'Agro',regional:'Centro-Oeste',pontos:22400,meta:105},
+    {nome:'Lucia Barbosa',bu:'Retail',regional:'Sul',pontos:21200,meta:76},
+    {nome:'Andre Torres',bu:'FMCG',regional:'Sudeste',pontos:20100,meta:81},
+  ],
+  funil: {
+    labels:['Vendedores Cadastrados','Participantes Ativos','Metas Acessadas','Pontos Obtidos','Resgates Realizados'],
+    valores:[1240, 980, 860, 720, 530]
+  },
+  categoriaResgate: {
+    labels:['Vale Alimentação','Eletronicos','Viagens','Vouchers','Cartão Presente','Outros'],
+    valores:[32, 24, 18, 12, 9, 5]
+  },
+  roi: {
+    labels:['Acelera Verão','Desafio Pharma','Turbo Retail','Boost Agro','Sprint Telco','Maratona FMCG'],
+    valores:[3.2, 2.8, 2.1, 3.8, 2.4, 2.9]
+  },
+  engajamento: [62,65,68,64,72,78,81,76,83,85,88,91]
+};
+
+// ============================================================
+// CHART DEFAULTS
+// ============================================================
+Chart.defaults.color = 'rgba(241,240,255,0.45)';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.07)';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.font.size = 12;
+
+const COLORS = {
+  purple: '#7c3aed', purpleL: '#a78bfa', purpleN: '#c084fc',
+  gold: '#f59e0b', cyan: '#22d3ee', green: '#10b981', red: '#f43f5e'
+};
+
+function gradientFill(ctx, color1, color2) {
+  const g = ctx.createLinearGradient(0,0,0,300);
+  g.addColorStop(0, color1);
+  g.addColorStop(1, color2);
+  return g;
+}
+
+// ============================================================
+// BUILD KPI CARDS
+// ============================================================
+function buildKPIs(containerId, kpis) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = kpis.map(k => `
+    <div class="kpi-card ${k.color||''}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <span class="kpi-delta ${k.trend>0?'up':'down'}">
+        ${k.trend>0?'↑':'↓'} ${Math.abs(k.trend)}% vs mês ant.
+      </span>
+    </div>
+  `).join('');
+}
+
+buildKPIs('kpiGrid', [
+  {label:'Total de Pontos Emitidos',value:'R$ 36,5M',trend:12.4},
+  {label:'Total Resgatado',value:'R$ 21,7M',trend:8.6,color:'gold'},
+  {label:'Saldo de Pontos',value:'R$ 14,8M',trend:-3.1,color:'cyan'},
+  {label:'Ticket Médio',value:'R$ 387',trend:5.2,color:'green'},
+  {label:'Vendedores Ativos',value:'980',trend:6.8},
+  {label:'Campanhas Ativas',value:'8',trend:0,color:''},
+]);
+buildKPIs('kpiFinanceiro', [
+  {label:'Receita Total (Pontos R$)',value:'R$ 36,5M',trend:12.4},
+  {label:'Volume Resgatado',value:'R$ 21,7M',trend:8.6,color:'gold'},
+  {label:'Saldo a Resgatar',value:'R$ 14,8M',trend:-3.1,color:'cyan'},
+  {label:'ROI Médio Campanhas',value:'3.0x',trend:4.2,color:'green'},
+  {label:'Burn Rate Mensal',value:'59.5%',trend:2.1,color:'red'},
+  {label:'Forecast Dez/24',value:'R$ 4,1M',trend:9.4},
+]);
+buildKPIs('kpiCampanhas', [
+  {label:'Campanhas Totais',value:'18',trend:12.5},
+  {label:'Campanhas Ativas',value:'8',trend:14.3,color:'green'},
+  {label:'% Atingimento Médio',value:'93,2%',trend:2.8},
+  {label:'Pontos por Campanha',value:'R$ 2,0M',trend:7.1,color:'gold'},
+]);
+buildKPIs('kpiRegional', [
+  {label:'Sudeste',value:'R$ 12,4M',trend:15.2},
+  {label:'Sul',value:'R$ 8,6M',trend:9.4,color:'gold'},
+  {label:'Nordeste',value:'R$ 7,2M',trend:6.8,color:'cyan'},
+  {label:'Centro-Oeste',value:'R$ 4,8M',trend:11.0,color:'green'},
+  {label:'Norte',value:'R$ 2,8M',trend:4.5},
+]);
+buildKPIs('kpiVendedores', [
+  {label:'Vendedores Cadastrados',value:'1.240',trend:4.2},
+  {label:'Vendedores Ativos',value:'980',trend:6.8,color:'green'},
+  {label:'Taxa de Ativação',value:'79,0%',trend:2.4},
+  {label:'Média de Pontos/Vendedor',value:'R$ 29,5K',trend:8.1,color:'gold'},
+]);
+buildKPIs('kpiResgates', [
+  {label:'Total de Resgates',value:'21.432',trend:9.4},
+  {label:'Valor Resgatado',value:'R$ 21,7M',trend:8.6,color:'gold'},
+  {label:'Ticket Médio',value:'R$ 387',trend:5.2,color:'green'},
+  {label:'Taxa de Conversão',value:'73,5%',trend:3.1,color:'cyan'},
+]);
+buildKPIs('kpiEngajamento', [
+  {label:'Engajamento Geral',value:'79,0%',trend:6.8,color:'green'},
+  {label:'NPS Plataforma',value:'72',trend:4.1,color:'gold'},
+  {label:'DAU (Acessos/dia)',value:'342',trend:11.2},
+  {label:'Churn de Participantes',value:'8,2%',trend:-1.8,color:'red'},
+]);
+
+// ============================================================
+// INSIGHTS STRIP
+// ============================================================
+document.getElementById('insightStrip').innerHTML = [
+  'Sudeste lidera com <span>R$12,4M</span> em pontos distribuídos',
+  'Campanha <span>Boost Agro</span> com maior ROI: <span>3.8x</span>',
+  '<span>+12,4%</span> de crescimento vs. Jan/24',
+  'Ticket médio cresceu <span>+5,2%</span> no último mês',
+  '<span>93,2%</span> de atingimento médio nas campanhas ativas',
+  'FMCG representa <span>38%</span> do volume total de pontos',
+].map(t=>`<div class="insight-chip">💡 ${t}</div>`).join('');
+
+// ============================================================
+// CHARTS
+// ============================================================
+function buildChart(id, config) {
+  const el = document.getElementById(id);
+  if (!el) return null;
+  const existing = Chart.getChart(el);
+  if (existing) existing.destroy();
+  return new Chart(el, config);
+}
+
+// Evolução
+buildChart('chartEvolucao', {
+  type: 'line',
+  data: {
+    labels: DATA.meses,
+    datasets: [
+      {
+        label: 'Pontos Emitidos (R$ mil)',
+        data: DATA.pontos,
+        borderColor: COLORS.purple,
+        backgroundColor: 'rgba(124,58,237,0.08)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3,
+        pointHoverRadius: 6,
+        borderWidth: 2,
+      },
+      {
+        label: 'Resgates (R$ mil)',
+        data: DATA.resgates,
+        borderColor: COLORS.gold,
+        backgroundColor: 'rgba(245,158,11,0.05)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3,
+        pointHoverRadius: 6,
+        borderWidth: 2,
+      }
+    ]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ labels:{ color:'rgba(241,240,255,0.6)', boxWidth:12 }}},
+    scales:{
+      x:{ grid:{ color:'rgba(255,255,255,0.05)' }},
+      y:{ grid:{ color:'rgba(255,255,255,0.05)' }}
+    }
+  }
+});
+
+// BU Doughnut
+buildChart('chartBU', {
+  type: 'doughnut',
+  data: {
+    labels: DATA.bu.labels,
+    datasets:[{
+      data: DATA.bu.valores,
+      backgroundColor:['#7c3aed','#f59e0b','#22d3ee','#10b981','#f43f5e'],
+      borderWidth:0,
+      hoverOffset:6,
+    }]
+  },
+  options: {
+    responsive:true, maintainAspectRatio:false,
+    cutout:'72%',
+    plugins:{
+      legend:{ position:'right', labels:{ color:'rgba(241,240,255,0.6)', padding:12, boxWidth:10 }},
+    }
+  }
+});
+
+// Regional Bar
+buildChart('chartRegional', {
+  type:'bar',
+  data:{
+    labels: DATA.regional.labels,
+    datasets:[
+      { label:'Pontos (R$ mil)', data: DATA.regional.pontos.map(v=>v/1000),
+        backgroundColor:'rgba(124,58,237,0.5)', borderRadius:4 },
+      { label:'Meta (R$ mil)', data: DATA.regional.metas.map(v=>v/1000),
+        backgroundColor:'rgba(245,158,11,0.3)', borderRadius:4 }
+    ]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ labels:{ color:'rgba(241,240,255,0.6)', boxWidth:10 }}},
+    scales:{
+      x:{ grid:{ display:false }},
+      y:{ grid:{ color:'rgba(255,255,255,0.05)' }}
+    }
+  }
+});
+
+// Status Pie
+buildChart('chartStatus', {
+  type:'pie',
+  data:{
+    labels:['Encerrada','Ativa','Futura','Pausada'],
+    datasets:[{
+      data:[10,8,3,2],
+      backgroundColor:['rgba(100,116,139,0.6)','rgba(16,185,129,0.6)','rgba(124,58,237,0.6)','rgba(245,158,11,0.6)'],
+      borderWidth:0
+    }]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:'right', labels:{ color:'rgba(241,240,255,0.6)', boxWidth:10 }}}
+  }
+});
+
+// Waterfall
+buildChart('chartWaterfall', {
+  type:'bar',
+  data:{
+    labels: DATA.meses,
+    datasets:[
+      { label:'Pontos Emitidos', data: DATA.pontos,
+        backgroundColor:'rgba(124,58,237,0.5)', borderRadius:4 },
+      { label:'Resgates', data: DATA.resgates.map(v=>-v),
+        backgroundColor:'rgba(244,63,94,0.5)', borderRadius:4 },
+      { label:'Saldo', data: DATA.saldo,
+        backgroundColor:'rgba(16,185,129,0.4)', borderRadius:4 }
+    ]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ labels:{ color:'rgba(241,240,255,0.6)', boxWidth:10 }}},
+    scales:{
+      x:{ grid:{ display:false }},
+      y:{ grid:{ color:'rgba(255,255,255,0.05)' }, stacked:false }
+    }
+  }
+});
+
+// Categoria Receita
+buildChart('chartCategoria', {
+  type:'bar',
+  data:{
+    labels:['FMCG','Pharma','Telco','Retail','Agro'],
+    datasets:[{
+      label:'R$ Mil',
+      data:[13870,8030,6570,5110,2920],
+      backgroundColor:['#7c3aed','#f59e0b','#22d3ee','#10b981','#f43f5e'],
+      borderRadius:6
+    }]
+  },
+  options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:false }},
+    scales:{
+      x:{ grid:{ color:'rgba(255,255,255,0.05)' }},
+      y:{ grid:{ display:false }}
+    }
+  }
+});
+
+// Ticket Médio
+buildChart('chartTicket', {
+  type:'line',
+  data:{
+    labels: DATA.meses,
+    datasets:[{
+      label:'Ticket Médio (R$)',
+      data: DATA.ticketMedio,
+      borderColor: COLORS.cyan,
+      backgroundColor:'rgba(34,211,238,0.07)',
+      fill:true, tension:0.4, pointRadius:3, borderWidth:2
+    }]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:false }},
+    scales:{
+      x:{ grid:{ color:'rgba(255,255,255,0.05)' }},
+      y:{ grid:{ color:'rgba(255,255,255,0.05)' }}
+    }
+  }
+});
+
+// ROI
+buildChart('chartROI', {
+  type:'bar',
+  data:{
+    labels: DATA.roi.labels,
+    datasets:[{
+      label:'ROI',
+      data: DATA.roi.valores,
+      backgroundColor:'rgba(16,185,129,0.5)',
+      borderRadius:5
+    }]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:false }},
+    scales:{
+      x:{ grid:{ display:false }},
+      y:{ grid:{ color:'rgba(255,255,255,0.05)' }}
+    }
+  }
+});
+
+// Funil
+buildChart('chartFunil', {
+  type:'bar',
+  data:{
+    labels: DATA.funil.labels,
+    datasets:[{
+      label:'Participantes',
+      data: DATA.funil.valores,
+      backgroundColor:['rgba(124,58,237,0.7)','rgba(124,58,237,0.6)','rgba(124,58,237,0.5)','rgba(124,58,237,0.4)','rgba(124,58,237,0.3)'],
+      borderRadius:4
+    }]
+  },
+  options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:false }},
+    scales:{
+      x:{ grid:{ color:'rgba(255,255,255,0.05)' }},
+      y:{ grid:{ display:false }}
+    }
+  }
+});
+
+// Resgate Categoria
+buildChart('chartResgateCat', {
+  type:'doughnut',
+  data:{
+    labels: DATA.categoriaResgate.labels,
+    datasets:[{
+      data: DATA.categoriaResgate.valores,
+      backgroundColor:['#7c3aed','#f59e0b','#22d3ee','#10b981','#f43f5e','rgba(241,240,255,0.2)'],
+      borderWidth:0
+    }]
+  },
+  options:{ responsive:true, maintainAspectRatio:false, cutout:'65%',
+    plugins:{ legend:{ position:'right', labels:{ color:'rgba(241,240,255,0.6)', boxWidth:10 }}}
+  }
+});
+
+// Resgate Evolucao
+buildChart('chartResgateEvolucao', {
+  type:'line',
+  data:{
+    labels: DATA.meses,
+    datasets:[{
+      label:'Resgates Acumulados (R$ mil)',
+      data: DATA.resgates.reduce((acc,v,i)=>[...acc,(acc[i-1]||0)+v],[]),
+      borderColor: COLORS.gold,
+      backgroundColor:'rgba(245,158,11,0.07)',
+      fill:true, tension:0.4, pointRadius:3, borderWidth:2
+    }]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:false }},
+    scales:{
+      x:{ grid:{ color:'rgba(255,255,255,0.05)' }},
+      y:{ grid:{ color:'rgba(255,255,255,0.05)' }}
+    }
+  }
+});
+
+// Engajamento
+buildChart('chartEngajamento', {
+  type:'line',
+  data:{
+    labels: DATA.meses,
+    datasets:[{
+      label:'Engajamento (%)',
+      data: DATA.engajamento,
+      borderColor: COLORS.green,
+      backgroundColor:'rgba(16,185,129,0.08)',
+      fill:true, tension:0.4, pointRadius:3, borderWidth:2
+    }]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:false }},
+    scales:{
+      x:{ grid:{ color:'rgba(255,255,255,0.05)' }},
+      y:{ grid:{ color:'rgba(255,255,255,0.05)' }, min:50, max:100 }
+    }
+  }
+});
+
+// ABC
+buildChart('chartABC', {
+  type:'bar',
+  data:{
+    labels:['A (Top 20%)','B (Médios 30%)','C (Base 50%)'],
+    datasets:[{
+      label:'% Pontos Gerados',
+      data:[72, 20, 8],
+      backgroundColor:['rgba(245,158,11,0.6)','rgba(124,58,237,0.5)','rgba(100,116,139,0.4)'],
+      borderRadius:6
+    }]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:false }},
+    scales:{
+      x:{ grid:{ display:false }},
+      y:{ grid:{ color:'rgba(255,255,255,0.05)' }}
+    }
+  }
+});
+
+// ============================================================
+// TABLES
+// ============================================================
+function statusPill(s) {
+  const map = { Ativa:'status-active', Encerrada:'status-inactive', Pendente:'status-pending', Futura:'status-pending' };
+  return `<span class="status-pill ${map[s]||'status-pending'}">${s}</span>`;
+}
+
+function progressBar(pct, color='') {
+  return `<div class="progress-bar-wrap">
+    <div class="progress-bar"><div class="progress-fill ${color}" style="width:${Math.min(pct,100)}%"></div></div>
+    <span style="font-size:12px;color:var(--text-muted);min-width:38px">${pct}%</span>
+  </div>`;
+}
+
+document.getElementById('tblCampanhasBody').innerHTML = DATA.campanhas.map((c,i)=>`
+  <tr>
+    <td><span class="rank-badge rank-${i<3?i+1:'other'}">${i+1}</span></td>
+    <td>${c.nome}</td><td>${c.bu}</td><td>${c.regional}</td>
+    <td style="font-size:12px;color:var(--text-muted)">${c.periodo}</td>
+    <td><strong style="color:var(--purple-light)">R$ ${c.pontos}</strong></td>
+    <td>${progressBar(c.atingimento, c.atingimento>=100?'green':'')}</td>
+    <td>${statusPill(c.status)}</td>
+  </tr>
+`).join('');
+
+document.getElementById('tblVendedoresBody').innerHTML = DATA.vendedores.map((v,i)=>`
+  <tr>
+    <td><span class="rank-badge rank-${i<3?i+1:'other'}">${i+1}</span></td>
+    <td>${v.nome}</td><td>${v.bu}</td><td>${v.regional}</td>
+    <td><strong style="color:var(--purple-light)">R$ ${v.pontos.toLocaleString('pt-BR')}</strong></td>
+    <td>${progressBar(v.meta, v.meta>=100?'green':v.meta>=85?'':'red')}</td>
+    <td>${statusPill(v.meta>=50?'Ativa':'Encerrada')}</td>
+  </tr>
+`).join('');
+
+// Ranking
+document.getElementById('rankVendedores').innerHTML = DATA.vendedores.slice(0,10).map((v,i)=>`
+  <tr>
+    <td><span class="rank-badge rank-${i<3?i+1:'other'}">${i+1}</span></td>
+    <td>${v.nome}</td>
+    <td style="color:var(--purple-light);font-weight:600">R$ ${v.pontos.toLocaleString('pt-BR')}</td>
+    <td>${progressBar(v.meta)}</td>
+  </tr>
+`).join('');
+
+document.getElementById('rankBU').innerHTML = DATA.bu.labels.map((b,i)=>`
+  <tr>
+    <td><span class="rank-badge rank-${i<3?i+1:'other'}">${i+1}</span></td>
+    <td>${b}</td>
+    <td style="color:var(--purple-light);font-weight:600">${DATA.bu.valores[i]}%</td>
+    <td>${progressBar(DATA.bu.valores[i]*2.5)}</td>
+  </tr>
+`).join('');
+
+// Regional grid
+document.getElementById('regionGrid').innerHTML = DATA.regional.labels.map((r,i)=>{
+  const v = DATA.regional.pontos[i];
+  const m = DATA.regional.metas[i];
+  const pct = Math.round(v/m*100);
+  return `<div class="region-item">
+    <div class="region-name">${r}</div>
+    <div class="region-value">R$ ${(v/1000).toFixed(1)}K</div>
+    <div class="region-pct">${pct}% da meta</div>
+  </div>`;
+}).join('');
+
+// Heatmap text
+document.getElementById('heatmapRegional').innerHTML = `
+  <div style="text-align:center;color:var(--text-muted)">
+    <div style="font-size:36px;margin-bottom:8px">⬡</div>
+    <div style="font-size:13px">Conecte sua base de dados<br>para habilitar o heatmap interativo</div>
+    <div style="font-size:11px;margin-top:8px;color:rgba(124,58,237,0.6)">ApexCharts · Heatmap Engine</div>
+  </div>
+`;
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+const pageTitles = {
+  executivo: ['Visão Executiva','Consolidado · Jan–Dez 2024'],
+  financeiro: ['Painel Financeiro','Fluxo de pontos e resgates'],
+  campanhas: ['Campanhas','Gestão e performance de campanhas'],
+  regional: ['Análise Regional','Distribuição geográfica de pontos'],
+  vendedores: ['Vendedores','Performance individual e ranking'],
+  resgates: ['Resgates','Análise de benefícios resgatados'],
+  ranking: ['Ranking','Top performers por dimensão'],
+  engagement: ['Engajamento','Métricas de ativação e retenção'],
+};
+
+function showPage(page, el) {
+  document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const section = document.getElementById('page-'+page);
+  if (section) section.classList.add('active');
+  if (el) el.classList.add('active');
+  const [title, sub] = pageTitles[page] || [page,''];
+  document.getElementById('pageTitle').textContent = title;
+  document.getElementById('pageSubtitle').textContent = sub;
+  if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ============================================================
+// TABLE FILTER
+// ============================================================
+function filterTable(tableId, query) {
+  const rows = document.getElementById(tableId).querySelectorAll('tbody tr');
+  rows.forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(query.toLowerCase()) ? '' : 'none';
+  });
+}
+
+// ============================================================
+// EXPORT CSV
+// ============================================================
+function exportCSV() {
+  const headers = ['Vendedor','BU','Regional','Pontos','% Meta'];
+  const rows = DATA.vendedores.map(v=>[v.nome,v.bu,v.regional,v.pontos,v.meta+'%']);
+  const csv = [headers,...rows].map(r=>r.join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='incentivale_export.csv';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// FILTERS (client-side stub — conectar à lógica de dados real)
+// ============================================================
+function applyFilters() {
+  const ano = document.getElementById('filterAno').value;
+  const bu = document.getElementById('filterBU').value;
+  const reg = document.getElementById('filterRegional').value;
+  // Stub: em prod, filtraria DATA e reconstruiria os gráficos
+  console.log('Filtros aplicados:', {ano, bu, reg});
+}
+</script>
+</body>
+</html>
